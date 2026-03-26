@@ -1,0 +1,95 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<link rel="manifest" href="manifest.json">
+<meta charset="UTF-8">
+<head>
+<title>Calculadora Ahorro Pareja</title>
+<style>
+    body {
+        font-family: Arial;
+        background: #f4f4f4;
+        text-align: center;
+        padding: 20px;
+    }
+    .box {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        max-width: 350px;
+        margin: auto;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input {
+        width: 90%;
+        padding: 10px;
+        margin: 10px 0;
+        font-size: 16px;
+    }
+    button {
+        padding: 10px;
+        width: 100%;
+        background: #007bff;
+        color: white;
+        border: none;
+        font-size: 16px;
+        border-radius: 5px;
+    }
+    .resultado {
+        margin-top: 20px;
+        font-weight: bold;
+    }
+</style>
+</head>
+<body>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js');
+}
+</script>
+
+<div class="box">
+    <h2>💰 Ahorro en Pareja</h2>
+
+
+    <input type="number" id="tuSueldo" placeholder="Tu sueldo (€)">
+    <input type="number" id="sueldoPareja" placeholder="Sueldo pareja (€)">
+    <input type="number" id="ahorro" placeholder="Ahorro total (€)">
+
+
+    <button onclick="calcular()">Calcular</button>
+
+
+    <div class="resultado" id="resultado"></div>
+</div>
+
+
+<script>
+function calcular() {
+    let tu = parseFloat(document.getElementById("tuSueldo").value);
+    let pareja = parseFloat(document.getElementById("sueldoPareja").value);
+    let ahorro = parseFloat(document.getElementById("ahorro").value);
+
+
+    if (!tu || !pareja || !ahorro) {
+        document.getElementById("resultado").innerHTML = "⚠️ Rellena todos los campos";
+        return;
+    }
+
+
+    let total = tu + pareja;
+
+
+    let tuAportas = ahorro * (tu / total);
+    let parejaAporta = ahorro * (pareja / total);
+
+
+    document.getElementById("resultado").innerHTML = `
+        Tú aportas: ${tuAportas.toFixed(2)} € <br>
+        Tu pareja aporta: ${parejaAporta.toFixed(2)} €
+    `;
+}
+</script>
+
+
+</body>
+</html>
