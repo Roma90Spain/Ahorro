@@ -72,12 +72,15 @@ button {
 let ultimoCalculo = null;
 
 function calcular() {
-    let tu = parseFloat(tuSueldo.value);
-    let pareja = parseFloat(sueldoPareja.value);
-    let ahorro = parseFloat(ahorro.value);
+    let tu = parseFloat(document.getElementById("tuSueldo").value);
+    let pareja = parseFloat(document.getElementById("sueldoPareja").value);
+    let ahorro = parseFloat(document.getElementById("ahorro").value);
+    let mes = document.getElementById("mes").value;
+
+    let resultadoDiv = document.getElementById("resultado");
 
     if (!tu || !pareja || !ahorro) {
-        resultado.innerHTML = "⚠️ Rellena todos los campos";
+        resultadoDiv.innerHTML = "⚠️ Rellena todos los campos";
         return;
     }
 
@@ -87,7 +90,7 @@ function calcular() {
     let parejaAporta = ahorro * (pareja / total);
 
     if (tuAportas > tu || parejaAporta > pareja) {
-        resultado.innerHTML = "❌ Ahorro demasiado alto";
+        resultadoDiv.innerHTML = "❌ Ahorro demasiado alto";
         return;
     }
 
@@ -95,12 +98,12 @@ function calcular() {
     let parejaPorcentaje = (pareja / total) * 100;
 
     ultimoCalculo = {
-        mes: document.getElementById("mes").value,
-        tuAportas,
-        parejaAporta
+        mes: mes,
+        tuAportas: tuAportas,
+        parejaAporta: parejaAporta
     };
 
-    resultado.innerHTML = `
+    resultadoDiv.innerHTML = `
         Tú: ${tuAportas.toFixed(2)}€ (${tuPorcentaje.toFixed(1)}%)<br>
         Pareja: ${parejaAporta.toFixed(2)}€ (${parejaPorcentaje.toFixed(1)}%)
     `;
@@ -123,9 +126,9 @@ function guardar() {
 
 function resetear() {
     if (confirm("¿Seguro que quieres borrar todos los datos?")) {
-        localStorage.removeItem("ahorros");
+        localStorage.clear(); // 🔥 más fiable
+        document.getElementById("resultado").innerHTML = "";
         mostrarHistorial();
-        resultado.innerHTML = "";
     }
 }
 
@@ -150,7 +153,7 @@ function mostrarHistorial() {
     Pareja: ${totalPareja.toFixed(2)}€<br>
     Total: ${(totalTu + totalPareja).toFixed(2)}€`;
 
-    historial.innerHTML = html;
+    document.getElementById("historial").innerHTML = html;
 }
 
 // cargar al abrir
