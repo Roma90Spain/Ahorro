@@ -1,9 +1,11 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
-<link rel="manifest" href="manifest.json">
-<meta charset="UTF-8">
 <head>
-<title>Calculadora Ahorro Pareja</title>
+<meta charset="UTF-8">
+<title>Ahorro en Pareja</title>
+
+<link rel="manifest" href="manifest.json">
+
 <style>
     body {
         font-family: Arial;
@@ -41,27 +43,18 @@
 </style>
 </head>
 <body>
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('service-worker.js');
-}
-</script>
 
 <div class="box">
     <h2>💰 Ahorro en Pareja</h2>
 
-
     <input type="number" id="tuSueldo" placeholder="Tu sueldo (€)">
     <input type="number" id="sueldoPareja" placeholder="Sueldo pareja (€)">
-    <input type="number" id="ahorro" placeholder="Ahorro total (€)">
-
+    <input type="number" id="ahorro" placeholder="Ahorro objetivo (€)">
 
     <button onclick="calcular()">Calcular</button>
 
-
     <div class="resultado" id="resultado"></div>
 </div>
-
 
 <script>
 function calcular() {
@@ -69,27 +62,49 @@ function calcular() {
     let pareja = parseFloat(document.getElementById("sueldoPareja").value);
     let ahorro = parseFloat(document.getElementById("ahorro").value);
 
-
     if (!tu || !pareja || !ahorro) {
-        document.getElementById("resultado").innerHTML = "⚠️ Rellena todos los campos";
+        resultado.innerHTML = "⚠️ Rellena todos los campos";
         return;
     }
 
-
     let total = tu + pareja;
 
-
+    // Cálculo proporcional
     let tuAportas = ahorro * (tu / total);
     let parejaAporta = ahorro * (pareja / total);
 
+    // Porcentajes
+    let tuPorcentaje = (tu / total) * 100;
+    let parejaPorcentaje = (pareja / total) * 100;
 
-    document.getElementById("resultado").innerHTML = `
-        Tú aportas: ${tuAportas.toFixed(2)} € <br>
-        Tu pareja aporta: ${parejaAporta.toFixed(2)} €
+    // 🚫 No permitir aportar más de lo que se gana
+    if (tuAportas > tu || parejaAporta > pareja) {
+        resultado.innerHTML = "❌ El ahorro es demasiado alto para vuestros ingresos";
+        return;
+    }
+
+    // ⚠️ Mensaje si el ahorro es muy exigente (>80% ingresos totales)
+    let porcentajeAhorro = (ahorro / total) * 100;
+    let aviso = "";
+
+    if (porcentajeAhorro > 80) {
+        aviso = "<br>⚠️ Estás intentando ahorrar más del 80% de los ingresos. Puede ser poco realista.";
+    }
+
+    resultado.innerHTML = `
+        💸 Tú aportas: ${tuAportas.toFixed(2)} € (${tuPorcentaje.toFixed(1)}%)<br>
+        💸 Tu pareja aporta: ${parejaAporta.toFixed(2)} € (${parejaPorcentaje.toFixed(1)}%)<br>
+        <br>
+        💰 Total ahorro: ${(tuAportas + parejaAporta).toFixed(2)} €<br>
+        ${aviso}
     `;
 }
-</script>
 
+// Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js');
+}
+</script>
 
 </body>
 </html>
