@@ -63,7 +63,7 @@ canvas{
 <button class="reset" onclick="resetear()">Reset</button>
 <button class="export" onclick="exportar()">Exportar Excel</button>
 
-<input type="file" onchange="importar()">
+<input type="file" onchange="importar(event)">
 
 <div id="resultado"></div>
 
@@ -88,6 +88,8 @@ let pareja=parseFloat(document.getElementById("sueldoPareja").value);
 let ahorro=parseFloat(document.getElementById("ahorro").value);
 let mes=document.getElementById("mes").value;
 
+let resultado=document.getElementById("resultado");
+
 if(!tu||!pareja||!ahorro){
 resultado.innerHTML="⚠️ Rellena todo";
 return;
@@ -95,7 +97,7 @@ return;
 
 let total=tu+pareja;
 
-// 🔥 reparto proporcional sin decimales
+// 🔥 reparto proporcional entero
 let tuA=Math.round(ahorro*(tu/total));
 let paA=Math.round(ahorro*(pareja/total));
 
@@ -131,7 +133,7 @@ return;
 
 let datos=JSON.parse(localStorage.getItem("ahorros"))||[];
 
-// evitar duplicados
+// ❌ evitar duplicados
 if(datos.some(d=>d.mes===ultimoCalculo.mes)){
 alert("❌ Mes ya existe");
 return;
@@ -179,6 +181,8 @@ function exportar(){
 
 let datos=JSON.parse(localStorage.getItem("ahorros"))||[];
 
+if(datos.length===0){alert("No hay datos"); return;}
+
 let csv="Mes,Nombre1,Aportacion1,Nombre2,Aportacion2\n";
 
 datos.forEach(d=>{
@@ -196,27 +200,43 @@ a.click();
 function importar(e){
 
 let file=e.target.files[0];
+if(!file){alert("Selecciona un archivo"); return;}
+
 let reader=new FileReader();
 
 reader.onload=function(ev){
 
-let lineas=ev.target.result.split("\n");
+let texto=ev.target.result.trim();
+let separador = texto.includes(";") ? ";" : ",";
+
+let lineas=texto.split(/\r?\n/);
 let datos=[];
 
 for(let i=1;i<lineas.length;i++){
-let l=lineas[i].split(",");
+let linea=lineas[i].trim();
+if(!linea) continue;
+
+let l=linea.split(separador);
+l = l.map(x=>x.trim());
+
 if(l.length<5) continue;
 
-datos.push({
-mes:l[0],
-n1:l[1],
-tuA:parseInt(l[2]),
-n2:l[3],
-paA:parseInt(l[4])
-});
+let mes=l[0];
+let n1=l[1];
+let tuA=parseInt(l[2]);
+let n2=l[3];
+let paA=parseInt(l[4]);
+
+if(!mes || isNaN(tuA) || isNaN(paA)) continue;
+
+datos.push({mes,n1,tuA,n2,paA});
 }
 
+if(datos.length===0){alert("❌ Archivo no válido"); return;}
+
 localStorage.setItem("ahorros",JSON.stringify(datos));
+alert("✅ Datos importados correctamente");
+
 mostrar();
 };
 
@@ -227,7 +247,6 @@ reader.readAsText(file);
 function dibujarGrafico(p1,p2,n1,n2){
 
 let ctx=document.getElementById("grafico").getContext("2d");
-
 ctx.clearRect(0,0,200,200);
 
 let ang=(p1/100)*2*Math.PI;
@@ -249,7 +268,7 @@ ctx.fillText(n1+" "+p1.toFixed(1)+"%",10,15);
 ctx.fillText(n2+" "+p2.toFixed(1)+"%",10,30);
 }
 
-// init
+// ================= INIT =================
 mostrar();
 
 </script>
