@@ -2,27 +2,72 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+
+<!-- 🔥 CLAVE PARA MÓVIL -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Ahorro en Pareja</title>
 
 <link rel="manifest" href="manifest.json">
 
 <style>
-body { font-family: Arial; background:#f4f4f4; text-align:center; padding:20px; }
-.box { background:white; padding:20px; border-radius:10px; max-width:400px; margin:auto; }
-input, button { width:90%; padding:10px; margin:5px 0; }
-button { border:none; border-radius:5px; font-size:16px; }
+body {
+    font-family: Arial;
+    background:#f4f4f4;
+    margin:0;
+    padding:10px;
+}
+
+.box {
+    background:white;
+    padding:15px;
+    border-radius:10px;
+    width:100%;
+    max-width:400px;
+    margin:auto;
+}
+
+input, button {
+    width:100%;
+    padding:12px;
+    margin:5px 0;
+    font-size:16px;
+    box-sizing: border-box;
+}
+
+button {
+    border:none;
+    border-radius:5px;
+}
+
 .calc{background:#007bff;color:white;}
 .save{background:#28a745;color:white;}
 .reset{background:#dc3545;color:white;}
 .export{background:#6c757d;color:white;}
-.resultado{margin-top:10px;font-weight:bold;}
-.historial{margin-top:15px;text-align:left;font-size:14px;}
-canvas{margin-top:15px;}
+
+.resultado{
+    margin-top:10px;
+    font-weight:bold;
+}
+
+.historial{
+    margin-top:15px;
+    font-size:14px;
+}
+
+canvas{
+    width:100%;
+    max-width:250px;
+    display:block;
+    margin:15px auto;
+}
 </style>
 </head>
 
 <body>
+
 <div class="box">
+
 <h2>💰 Ahorro en Pareja</h2>
 
 <input id="nombre1" placeholder="Nombre 1">
@@ -38,7 +83,7 @@ canvas{margin-top:15px;}
 <button class="reset" onclick="resetear()">Reset</button>
 <button class="export" onclick="exportar()">Exportar Excel</button>
 
-<input type="file" id="importFile" onchange="importar()" />
+<input type="file" id="importFile" onchange="importar()">
 
 <div class="resultado" id="resultado"></div>
 
@@ -49,9 +94,10 @@ canvas{margin-top:15px;}
 </div>
 
 <script>
-let ultimoCalculo = null;
+let ultimoCalculo=null;
 
 function calcular(){
+
 let n1=document.getElementById("nombre1").value||"Persona 1";
 let n2=document.getElementById("nombre2").value||"Persona 2";
 
@@ -112,6 +158,7 @@ mostrar();
 }
 
 function mostrar(){
+
 let datos=JSON.parse(localStorage.getItem("ahorros"))||[];
 
 let html="<h3>📊 Historial</h3>";
@@ -133,6 +180,7 @@ document.getElementById("historial").innerHTML=html;
 }
 
 function exportar(){
+
 let datos=JSON.parse(localStorage.getItem("ahorros"))||[];
 
 if(datos.length===0){
@@ -154,10 +202,12 @@ a.click();
 }
 
 function importar(){
+
 let file=document.getElementById("importFile").files[0];
 let reader=new FileReader();
 
 reader.onload=function(e){
+
 let texto=e.target.result;
 let lineas=texto.split("\n");
 
@@ -181,42 +231,5 @@ mostrar();
 };
 
 reader.readAsText(file);
-}
-
-function dibujarGrafico(p1,p2,n1,n2){
-let canvas=document.getElementById("grafico");
-let ctx=canvas.getContext("2d");
-
-ctx.clearRect(0,0,200,200);
-
-let ang1=(p1/100)*2*Math.PI;
-
-ctx.beginPath();
-ctx.moveTo(100,100);
-ctx.arc(100,100,80,0,ang1);
-ctx.fillStyle="red";
-ctx.fill();
-
-ctx.beginPath();
-ctx.moveTo(100,100);
-ctx.arc(100,100,80,ang1,2*Math.PI);
-ctx.fillStyle="blue";
-ctx.fill();
-
-ctx.fillStyle="black";
-ctx.font="12px Arial";
-ctx.fillText(n1+": "+p1.toFixed(1)+"%",10,15);
-ctx.fillText(n2+": "+p2.toFixed(1)+"%",10,30);
-}
-
-// cargar
-mostrar();
-
-// service worker
-if('serviceWorker'in navigator){
-navigator.serviceWorker.register('service-worker.js');
-}
-</script>
-
 </body>
 </html>
