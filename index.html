@@ -17,7 +17,6 @@ body {
     background:white;
     padding:15px;
     border-radius:10px;
-    width:100%;
     max-width:400px;
     margin:auto;
 }
@@ -27,28 +26,14 @@ input, button {
     padding:12px;
     margin:5px 0;
     font-size:16px;
-    box-sizing: border-box;
 }
 
-button {
-    border:none;
-    border-radius:5px;
-}
+button {border:none;border-radius:5px;}
 
 .calc{background:#007bff;color:white;}
 .save{background:#28a745;color:white;}
 .reset{background:#dc3545;color:white;}
 .export{background:#6c757d;color:white;}
-
-.resultado{
-    margin-top:10px;
-    font-weight:bold;
-}
-
-.historial{
-    margin-top:15px;
-    font-size:14px;
-}
 
 canvas{
     width:100%;
@@ -68,9 +53,9 @@ canvas{
 <input id="nombre1" placeholder="Nombre 1">
 <input id="nombre2" placeholder="Nombre 2">
 
-<input type="number" id="tuSueldo" placeholder="Sueldo 1 (€)">
-<input type="number" id="sueldoPareja" placeholder="Sueldo 2 (€)">
-<input type="number" id="ahorro" placeholder="Ahorro objetivo (€)">
+<input type="number" id="tuSueldo" placeholder="Sueldo 1">
+<input type="number" id="sueldoPareja" placeholder="Sueldo 2">
+<input type="number" id="ahorro" placeholder="Ahorro objetivo">
 <input type="month" id="mes">
 
 <button class="calc" onclick="calcular()">Calcular</button>
@@ -78,13 +63,13 @@ canvas{
 <button class="reset" onclick="resetear()">Reset</button>
 <button class="export" onclick="exportar()">Exportar Excel</button>
 
-<input type="file" id="importFile" onchange="importar()">
+<input type="file" onchange="importar()">
 
-<div class="resultado" id="resultado"></div>
+<div id="resultado"></div>
 
 <canvas id="grafico" width="200" height="200"></canvas>
 
-<div class="historial" id="historial"></div>
+<div id="historial"></div>
 
 </div>
 
@@ -92,7 +77,7 @@ canvas{
 
 let ultimoCalculo=null;
 
-// ===================== CALCULAR =====================
+// ================= CALCULAR =================
 function calcular(){
 
 let n1=document.getElementById("nombre1").value||"Persona 1";
@@ -103,17 +88,20 @@ let pareja=parseFloat(document.getElementById("sueldoPareja").value);
 let ahorro=parseFloat(document.getElementById("ahorro").value);
 let mes=document.getElementById("mes").value;
 
-let resultado=document.getElementById("resultado");
-
 if(!tu||!pareja||!ahorro){
-resultado.innerHTML="⚠️ Rellena todos los campos";
+resultado.innerHTML="⚠️ Rellena todo";
 return;
 }
 
 let total=tu+pareja;
 
-let tuA=parseFloat((ahorro*(tu/total)).toFixed(2));
-let paA=parseFloat((ahorro*(pareja/total)).toFixed(2));
+// 🔥 reparto proporcional sin decimales
+let tuA=Math.round(ahorro*(tu/total));
+let paA=Math.round(ahorro*(pareja/total));
+
+// 🔧 ajuste para que cuadre EXACTO
+let diferencia=ahorro-(tuA+paA);
+tuA+=diferencia;
 
 if(tuA>tu||paA>pareja){
 resultado.innerHTML="❌ Ahorro demasiado alto";
@@ -126,34 +114,28 @@ let p2=(paA/(tuA+paA))*100;
 ultimoCalculo={mes,n1,n2,tuA,paA};
 
 resultado.innerHTML=`
-${n1}: ${tuA.toFixed(2)}€ (${p1.toFixed(1)}%)<br>
-${n2}: ${paA.toFixed(2)}€ (${p2.toFixed(1)}%)
+${n1}: ${tuA}€ (${p1.toFixed(1)}%)<br>
+${n2}: ${paA}€ (${p2.toFixed(1)}%)
 `;
 
 dibujarGrafico(p1,p2,n1,n2);
 }
 
-// ===================== GUARDAR =====================
+// ================= GUARDAR =================
 function guardar(){
 
 if(!ultimoCalculo||!ultimoCalculo.mes){
-alert("Calcula primero y selecciona mes");
+alert("Calcula primero");
 return;
 }
 
 let datos=JSON.parse(localStorage.getItem("ahorros"))||[];
 
-// ❌ evitar duplicados
-let existe = datos.some(d => d.mes === ultimoCalculo.mes);
-
-if(existe){
-alert("❌ Ya existe un registro para ese mes");
+// evitar duplicados
+if(datos.some(d=>d.mes===ultimoCalculo.mes)){
+alert("❌ Mes ya existe");
 return;
 }
-
-// asegurar 2 decimales
-ultimoCalculo.tuA = parseFloat(ultimoCalculo.tuA.toFixed(2));
-ultimoCalculo.paA = parseFloat(ultimoCalculo.paA.toFixed(2));
 
 datos.push(ultimoCalculo);
 localStorage.setItem("ahorros",JSON.stringify(datos));
@@ -161,73 +143,64 @@ localStorage.setItem("ahorros",JSON.stringify(datos));
 mostrar();
 }
 
-// ===================== RESET =====================
+// ================= RESET =================
 function resetear(){
-if(confirm("¿Borrar todos los datos?")){
+if(confirm("¿Borrar todo?")){
 localStorage.clear();
-document.getElementById("resultado").innerHTML="";
-document.getElementById("grafico").getContext("2d").clearRect(0,0,200,200);
-mostrar();
+location.reload();
 }
 }
 
-// ===================== MOSTRAR =====================
+// ================= MOSTRAR =================
 function mostrar(){
 
 let datos=JSON.parse(localStorage.getItem("ahorros"))||[];
 
-let html="<h3>📊 Historial</h3>";
+let html="<h3>Historial</h3>";
 
 let t1=0,t2=0;
 
 datos.forEach(d=>{
-html+=`${d.mes} → ${d.n1}: ${d.tuA.toFixed(2)}€ | ${d.n2}: ${d.paA.toFixed(2)}€<br>`;
+html+=`${d.mes} → ${d.n1}: ${d.tuA}€ | ${d.n2}: ${d.paA}€<br>`;
 t1+=d.tuA;
 t2+=d.paA;
 });
 
-html+=`<br><b>Totales acumulados:</b><br>
-${datos[0]?.n1||"Persona 1"}: ${t1.toFixed(2)}€<br>
-${datos[0]?.n2||"Persona 2"}: ${t2.toFixed(2)}€<br>
-Total: ${(t1+t2).toFixed(2)}€`;
+html+=`<br><b>Totales:</b><br>
+${datos[0]?.n1||"P1"}: ${t1}€<br>
+${datos[0]?.n2||"P2"}: ${t2}€<br>
+Total: ${t1+t2}€`;
 
 document.getElementById("historial").innerHTML=html;
 }
 
-// ===================== EXPORTAR =====================
+// ================= EXPORTAR =================
 function exportar(){
 
 let datos=JSON.parse(localStorage.getItem("ahorros"))||[];
 
-if(datos.length===0){
-alert("No hay datos");
-return;
-}
-
 let csv="Mes,Nombre1,Aportacion1,Nombre2,Aportacion2\n";
 
 datos.forEach(d=>{
-csv+=`${d.mes},${d.n1},${d.tuA.toFixed(2)},${d.n2},${d.paA.toFixed(2)}\n`;
+csv+=`${d.mes},${d.n1},${d.tuA},${d.n2},${d.paA}\n`;
 });
 
-let blob=new Blob([csv],{type:"text/csv"});
+let blob=new Blob([csv]);
 let a=document.createElement("a");
 a.href=URL.createObjectURL(blob);
 a.download="ahorros.csv";
 a.click();
 }
 
-// ===================== IMPORTAR =====================
-function importar(){
+// ================= IMPORTAR =================
+function importar(e){
 
-let file=document.getElementById("importFile").files[0];
+let file=e.target.files[0];
 let reader=new FileReader();
 
-reader.onload=function(e){
+reader.onload=function(ev){
 
-let texto=e.target.result;
-let lineas=texto.split("\n");
-
+let lineas=ev.target.result.split("\n");
 let datos=[];
 
 for(let i=1;i<lineas.length;i++){
@@ -237,9 +210,9 @@ if(l.length<5) continue;
 datos.push({
 mes:l[0],
 n1:l[1],
-tuA:parseFloat(l[2]),
+tuA:parseInt(l[2]),
 n2:l[3],
-paA:parseFloat(l[4])
+paA:parseInt(l[4])
 });
 }
 
@@ -250,35 +223,33 @@ mostrar();
 reader.readAsText(file);
 }
 
-// ===================== GRAFICO =====================
+// ================= GRAFICO =================
 function dibujarGrafico(p1,p2,n1,n2){
 
-let canvas=document.getElementById("grafico");
-let ctx=canvas.getContext("2d");
+let ctx=document.getElementById("grafico").getContext("2d");
 
 ctx.clearRect(0,0,200,200);
 
-let ang1=(p1/100)*2*Math.PI;
+let ang=(p1/100)*2*Math.PI;
 
 ctx.beginPath();
 ctx.moveTo(100,100);
-ctx.arc(100,100,80,0,ang1);
+ctx.arc(100,100,80,0,ang);
 ctx.fillStyle="red";
 ctx.fill();
 
 ctx.beginPath();
 ctx.moveTo(100,100);
-ctx.arc(100,100,80,ang1,2*Math.PI);
+ctx.arc(100,100,80,ang,2*Math.PI);
 ctx.fillStyle="blue";
 ctx.fill();
 
 ctx.fillStyle="black";
-ctx.font="12px Arial";
-ctx.fillText(n1+": "+p1.toFixed(1)+"%",10,15);
-ctx.fillText(n2+": "+p2.toFixed(1)+"%",10,30);
+ctx.fillText(n1+" "+p1.toFixed(1)+"%",10,15);
+ctx.fillText(n2+" "+p2.toFixed(1)+"%",10,30);
 }
 
-// ===================== INIT =====================
+// init
 mostrar();
 
 </script>
