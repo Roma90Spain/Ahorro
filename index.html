@@ -2,13 +2,8 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-
-<!-- 🔥 CLAVE PARA MÓVIL -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Ahorro en Pareja</title>
-
-<link rel="manifest" href="manifest.json">
 
 <style>
 body {
@@ -94,8 +89,10 @@ canvas{
 </div>
 
 <script>
+
 let ultimoCalculo=null;
 
+// ===================== CALCULAR =====================
 function calcular(){
 
 let n1=document.getElementById("nombre1").value||"Persona 1";
@@ -115,8 +112,8 @@ return;
 
 let total=tu+pareja;
 
-let tuA=ahorro*(tu/total);
-let paA=ahorro*(pareja/total);
+let tuA=parseFloat((ahorro*(tu/total)).toFixed(2));
+let paA=parseFloat((ahorro*(pareja/total)).toFixed(2));
 
 if(tuA>tu||paA>pareja){
 resultado.innerHTML="❌ Ahorro demasiado alto";
@@ -136,27 +133,45 @@ ${n2}: ${paA.toFixed(2)}€ (${p2.toFixed(1)}%)
 dibujarGrafico(p1,p2,n1,n2);
 }
 
+// ===================== GUARDAR =====================
 function guardar(){
+
 if(!ultimoCalculo||!ultimoCalculo.mes){
 alert("Calcula primero y selecciona mes");
 return;
 }
 
 let datos=JSON.parse(localStorage.getItem("ahorros"))||[];
+
+// ❌ evitar duplicados
+let existe = datos.some(d => d.mes === ultimoCalculo.mes);
+
+if(existe){
+alert("❌ Ya existe un registro para ese mes");
+return;
+}
+
+// asegurar 2 decimales
+ultimoCalculo.tuA = parseFloat(ultimoCalculo.tuA.toFixed(2));
+ultimoCalculo.paA = parseFloat(ultimoCalculo.paA.toFixed(2));
+
 datos.push(ultimoCalculo);
 localStorage.setItem("ahorros",JSON.stringify(datos));
 
 mostrar();
 }
 
+// ===================== RESET =====================
 function resetear(){
 if(confirm("¿Borrar todos los datos?")){
 localStorage.clear();
 document.getElementById("resultado").innerHTML="";
+document.getElementById("grafico").getContext("2d").clearRect(0,0,200,200);
 mostrar();
 }
 }
 
+// ===================== MOSTRAR =====================
 function mostrar(){
 
 let datos=JSON.parse(localStorage.getItem("ahorros"))||[];
@@ -179,6 +194,7 @@ Total: ${(t1+t2).toFixed(2)}€`;
 document.getElementById("historial").innerHTML=html;
 }
 
+// ===================== EXPORTAR =====================
 function exportar(){
 
 let datos=JSON.parse(localStorage.getItem("ahorros"))||[];
@@ -191,7 +207,7 @@ return;
 let csv="Mes,Nombre1,Aportacion1,Nombre2,Aportacion2\n";
 
 datos.forEach(d=>{
-csv+=`${d.mes},${d.n1},${d.tuA},${d.n2},${d.paA}\n`;
+csv+=`${d.mes},${d.n1},${d.tuA.toFixed(2)},${d.n2},${d.paA.toFixed(2)}\n`;
 });
 
 let blob=new Blob([csv],{type:"text/csv"});
@@ -201,6 +217,7 @@ a.download="ahorros.csv";
 a.click();
 }
 
+// ===================== IMPORTAR =====================
 function importar(){
 
 let file=document.getElementById("importFile").files[0];
@@ -231,5 +248,40 @@ mostrar();
 };
 
 reader.readAsText(file);
+}
+
+// ===================== GRAFICO =====================
+function dibujarGrafico(p1,p2,n1,n2){
+
+let canvas=document.getElementById("grafico");
+let ctx=canvas.getContext("2d");
+
+ctx.clearRect(0,0,200,200);
+
+let ang1=(p1/100)*2*Math.PI;
+
+ctx.beginPath();
+ctx.moveTo(100,100);
+ctx.arc(100,100,80,0,ang1);
+ctx.fillStyle="red";
+ctx.fill();
+
+ctx.beginPath();
+ctx.moveTo(100,100);
+ctx.arc(100,100,80,ang1,2*Math.PI);
+ctx.fillStyle="blue";
+ctx.fill();
+
+ctx.fillStyle="black";
+ctx.font="12px Arial";
+ctx.fillText(n1+": "+p1.toFixed(1)+"%",10,15);
+ctx.fillText(n2+": "+p2.toFixed(1)+"%",10,30);
+}
+
+// ===================== INIT =====================
+mostrar();
+
+</script>
+
 </body>
 </html>
