@@ -7,52 +7,26 @@
 <link rel="manifest" href="manifest.json">
 
 <style>
-body {
-    font-family: Arial;
-    background: #f4f4f4;
-    text-align: center;
-    padding: 20px;
-}
-.box {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    max-width: 380px;
-    margin: auto;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-}
-input {
-    width: 90%;
-    padding: 10px;
-    margin: 8px 0;
-}
-button {
-    padding: 10px;
-    width: 100%;
-    margin-top: 5px;
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-}
-.calc { background: #007bff; color: white; }
-.save { background: #28a745; color: white; }
-.reset { background: #dc3545; color: white; }
-
-.resultado {
-    margin-top: 15px;
-    font-weight: bold;
-}
-.historial {
-    margin-top: 20px;
-    text-align: left;
-    font-size: 14px;
-}
+body { font-family: Arial; background:#f4f4f4; text-align:center; padding:20px; }
+.box { background:white; padding:20px; border-radius:10px; max-width:400px; margin:auto; }
+input, button { width:90%; padding:10px; margin:5px 0; }
+button { border:none; border-radius:5px; font-size:16px; }
+.calc{background:#007bff;color:white;}
+.save{background:#28a745;color:white;}
+.reset{background:#dc3545;color:white;}
+.export{background:#6c757d;color:white;}
+.import{background:#ffc107;}
+.resultado{margin-top:10px;font-weight:bold;}
+.historial{margin-top:15px;text-align:left;font-size:14px;}
 </style>
 </head>
-<body>
 
+<body>
 <div class="box">
 <h2>💰 Ahorro en Pareja</h2>
+
+<input id="nombre1" placeholder="Tu nombre">
+<input id="nombre2" placeholder="Nombre pareja">
 
 <input type="number" id="tuSueldo" placeholder="Tu sueldo (€)">
 <input type="number" id="sueldoPareja" placeholder="Sueldo pareja (€)">
@@ -62,106 +36,116 @@ button {
 <button class="calc" onclick="calcular()">Calcular</button>
 <button class="save" onclick="guardar()">Guardar mes</button>
 <button class="reset" onclick="resetear()">Reset</button>
+<button class="export" onclick="exportar()">Exportar TXT</button>
+<input type="file" id="importFile" onchange="importar()" />
 
 <div class="resultado" id="resultado"></div>
-
 <div class="historial" id="historial"></div>
+
 </div>
 
 <script>
 let ultimoCalculo = null;
 
-function calcular() {
-    let tu = parseFloat(document.getElementById("tuSueldo").value);
-    let pareja = parseFloat(document.getElementById("sueldoPareja").value);
-    let ahorro = parseFloat(document.getElementById("ahorro").value);
-    let mes = document.getElementById("mes").value;
+function calcular(){
+let n1=document.getElementById("nombre1").value||"Tú";
+let n2=document.getElementById("nombre2").value||"Pareja";
 
-    let resultadoDiv = document.getElementById("resultado");
+let tu=parseFloat(document.getElementById("tuSueldo").value);
+let pareja=parseFloat(document.getElementById("sueldoPareja").value);
+let ahorro=parseFloat(document.getElementById("ahorro").value);
+let mes=document.getElementById("mes").value;
 
-    if (!tu || !pareja || !ahorro) {
-        resultadoDiv.innerHTML = "⚠️ Rellena todos los campos";
-        return;
-    }
-
-    let total = tu + pareja;
-
-    let tuAportas = ahorro * (tu / total);
-    let parejaAporta = ahorro * (pareja / total);
-
-    if (tuAportas > tu || parejaAporta > pareja) {
-        resultadoDiv.innerHTML = "❌ Ahorro demasiado alto";
-        return;
-    }
-
-    let tuPorcentaje = (tu / total) * 100;
-    let parejaPorcentaje = (pareja / total) * 100;
-
-    ultimoCalculo = {
-        mes: mes,
-        tuAportas: tuAportas,
-        parejaAporta: parejaAporta
-    };
-
-    resultadoDiv.innerHTML = `
-        Tú: ${tuAportas.toFixed(2)}€ (${tuPorcentaje.toFixed(1)}%)<br>
-        Pareja: ${parejaAporta.toFixed(2)}€ (${parejaPorcentaje.toFixed(1)}%)
-    `;
+if(!tu||!pareja||!ahorro){
+resultado.innerHTML="⚠️ Rellena todo";
+return;
 }
 
-function guardar() {
-    if (!ultimoCalculo || !ultimoCalculo.mes) {
-        alert("⚠️ Calcula y selecciona un mes primero");
-        return;
-    }
+let total=tu+pareja;
+let tuA=ahorro*(tu/total);
+let paA=ahorro*(pareja/total);
 
-    let datos = JSON.parse(localStorage.getItem("ahorros")) || [];
-
-    datos.push(ultimoCalculo);
-
-    localStorage.setItem("ahorros", JSON.stringify(datos));
-
-    mostrarHistorial();
+if(tuA>tu||paA>pareja){
+resultado.innerHTML="❌ Ahorro demasiado alto";
+return;
 }
 
-function resetear() {
-    if (confirm("¿Seguro que quieres borrar todos los datos?")) {
-        localStorage.clear(); // 🔥 más fiable
-        document.getElementById("resultado").innerHTML = "";
-        mostrarHistorial();
-    }
+ultimoCalculo={mes,n1,n2,tuA,paA};
+
+resultado.innerHTML=`
+${n1}: ${tuA.toFixed(2)}€<br>
+${n2}: ${paA.toFixed(2)}€
+`;
 }
 
-function mostrarHistorial() {
-    let datos = JSON.parse(localStorage.getItem("ahorros")) || [];
+function guardar(){
+if(!ultimoCalculo||!ultimoCalculo.mes){
+alert("Calcula primero");
+return;
+}
 
-    let html = "<h3>📊 Historial</h3>";
+let datos=JSON.parse(localStorage.getItem("ahorros"))||[];
+datos.push(ultimoCalculo);
+localStorage.setItem("ahorros",JSON.stringify(datos));
 
-    let totalTu = 0;
-    let totalPareja = 0;
+mostrar();
+}
 
-    datos.forEach(d => {
-        html += `
-        ${d.mes} → Tú: ${d.tuAportas.toFixed(2)}€ | Pareja: ${d.parejaAporta.toFixed(2)}€<br>
-        `;
-        totalTu += d.tuAportas;
-        totalPareja += d.parejaAporta;
-    });
+function resetear(){
+if(confirm("Borrar todo?")){
+localStorage.clear();
+resultado.innerHTML="";
+mostrar();
+}
+}
 
-    html += `<br><b>💰 Ahorro anual:</b><br>
-    Tú: ${totalTu.toFixed(2)}€<br>
-    Pareja: ${totalPareja.toFixed(2)}€<br>
-    Total: ${(totalTu + totalPareja).toFixed(2)}€`;
+function mostrar(){
+let datos=JSON.parse(localStorage.getItem("ahorros"))||[];
+let html="<h3>📊 Historial</h3>";
 
-    document.getElementById("historial").innerHTML = html;
+let total1=0,total2=0;
+
+datos.forEach(d=>{
+html+=`${d.mes} → ${d.n1}: ${d.tuA.toFixed(2)}€ | ${d.n2}: ${d.paA.toFixed(2)}€<br>`;
+total1+=d.tuA;
+total2+=d.paA;
+});
+
+html+=`<br><b>Totales acumulados:</b><br>
+${datos[0]?.n1||"Persona 1"}: ${total1.toFixed(2)}€<br>
+${datos[0]?.n2||"Persona 2"}: ${total2.toFixed(2)}€<br>
+Total conjunto: ${(total1+total2).toFixed(2)}€`;
+
+historial.innerHTML=html;
+}
+
+function exportar(){
+let datos=localStorage.getItem("ahorros");
+let blob=new Blob([datos],{type:"text/plain"});
+let a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="ahorros.txt";
+a.click();
+}
+
+function importar(){
+let file=document.getElementById("importFile").files[0];
+let reader=new FileReader();
+
+reader.onload=function(e){
+localStorage.setItem("ahorros",e.target.result);
+mostrar();
+};
+
+reader.readAsText(file);
 }
 
 // cargar al abrir
-mostrarHistorial();
+mostrar();
 
-// Service Worker
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('service-worker.js');
+// service worker
+if('serviceWorker'in navigator){
+navigator.serviceWorker.register('service-worker.js');
 }
 </script>
 
