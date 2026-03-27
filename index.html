@@ -40,11 +40,43 @@ button { border:none; border-radius:5px; font-size:16px; }
 <input type="file" id="importFile" onchange="importar()" />
 
 <div class="resultado" id="resultado"></div>
+  <canvas id="grafico" width="200" height="200"></canvas>
 <div class="historial" id="historial"></div>
 
 </div>
 
 <script>
+  function dibujarGrafico(porcentaje1, porcentaje2, nombre1, nombre2){
+    let canvas = document.getElementById("grafico");
+    let ctx = canvas.getContext("2d");
+
+    let inicio = 0;
+
+    // Limpiar
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 🔴 Parte 1 (rojo)
+    let angulo1 = (porcentaje1 / 100) * 2 * Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(100, 100);
+    ctx.arc(100, 100, 80, inicio, inicio + angulo1);
+    ctx.fillStyle = "red";
+    ctx.fill();
+
+    // 🔵 Parte 2 (azul)
+    let angulo2 = (porcentaje2 / 100) * 2 * Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(100, 100);
+    ctx.arc(100, 100, 80, inicio + angulo1, inicio + angulo1 + angulo2);
+    ctx.fillStyle = "blue";
+    ctx.fill();
+
+    // Texto centro
+    ctx.fillStyle = "black";
+    ctx.font = "12px Arial";
+    ctx.fillText(nombre1 + ": " + porcentaje1.toFixed(1) + "%", 20, 20);
+    ctx.fillText(nombre2 + ": " + porcentaje2.toFixed(1) + "%", 20, 40);
+  }
 let ultimoCalculo = null;
 
 function calcular(){
@@ -59,6 +91,10 @@ let mes=document.getElementById("mes").value;
 if(!tu||!pareja||!ahorro){
 resultado.innerHTML="⚠️ Rellena todo";
 return;
+  let porcentaje1 = (tuA / (tuA + paA)) * 100;
+let porcentaje2 = (paA / (tuA + paA)) * 100;
+
+dibujarGrafico(porcentaje1, porcentaje2, n1, n2);
 }
 
 let total=tu+pareja;
